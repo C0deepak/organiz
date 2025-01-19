@@ -73,7 +73,7 @@ The app uses a **React Context API** for managing the global state of tasks.
 
   - Toggles the task's `status` between "Complete" and "Incomplete" (Shortcut used while drag & drop feature).
 
-### How to Use:
+### How I Have Used:
 
 - I have wrapped the app's component tree with `TaskProvider` to make the context available across the app.
 - And used the `useTaskContext` hook in child components to access `tasks` and the task management functions.
