@@ -11,13 +11,21 @@ import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
 import Link from 'next/link';
-// import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
-// import { Droppable } from '../ui/droppable';
-// import { Draggable } from '../ui/draggable';
+import { DndContext, DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { Droppable } from '../ui/droppable';
+import { Draggable } from '../ui/draggable';
 
 const TaskViewer: React.FC<TaskViewerProps> = ({ groupedTasks }) => {
-    const { toggleStatus, editTask, deleteTask } = useTaskContext()
+    const { toggleStatus, editTask, deleteTask, changePriority } = useTaskContext()
     const [isOpen, setIsOpen] = useState(false)
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    )
 
     const [task, setTask] = useState({
         id: Date.now().toString(),
@@ -63,82 +71,82 @@ const TaskViewer: React.FC<TaskViewerProps> = ({ groupedTasks }) => {
         setIsOpen(false)
     };
 
-    // const handleDragEnd = (event: DragEndEvent) => {
-    //     const { active, over } = event;
-    //     console.log("active : ", active)
-    //     console.log("over : ", over)
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        // console.log("active : ", active)
+        // console.log("over : ", over)
 
-    //     if (!over) return;
-    //     const sourcePriority = active.data.current?.priority as Task['priority'];
-    //     const destinationPriority = over.id as Task['priority'];
+        if (!over) return;
+        const sourcePriority = active.data.current?.priority as Task['priority'];
+        const destinationPriority = over.id as Task['priority'];
 
-    //     if (sourcePriority !== destinationPriority) {
-    //         const taskId = active.id as string;
-    //         changePriority(taskId, destinationPriority);
-    //     }
-    // };
+        if (sourcePriority !== destinationPriority) {
+            const taskId = active.id as string;
+            changePriority(taskId, destinationPriority);
+        }
+    };
 
     return (
-        // <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className='w-full grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12'>
                 {Object.entries(groupedTasks).map(([priority, tasks]) => (
-                    // <Droppable key={priority} id={priority}>
-                    <div key={priority}>
-                        {priority === 'High' && (<h2 className="text-lg font-semibold mb-4 p-2 rounded-lg text-white bg-amber-900/90">{priority} Priority</h2>)}
-                        {priority === 'Medium' && (<h2 className="text-lg font-semibold mb-4 p-2 rounded-lg text-white/80 bg-amber-900/60">{priority} Priority</h2>)}
-                        {priority === 'Low' && (<h2 className="text-lg font-semibold mb-4 p-2 rounded-lg text-white/60 bg-amber-900/30">{priority} Priority</h2>)}
+                    <Droppable key={priority} id={priority}>
+                        <div key={priority}>
+                            {priority === 'High' && (<h2 className="text-lg font-semibold mb-4 p-2 rounded-lg text-white bg-amber-900/90">{priority} Priority</h2>)}
+                            {priority === 'Medium' && (<h2 className="text-lg font-semibold mb-4 p-2 rounded-lg text-white/80 bg-amber-900/60">{priority} Priority</h2>)}
+                            {priority === 'Low' && (<h2 className="text-lg font-semibold mb-4 p-2 rounded-lg text-white/60 bg-amber-900/30">{priority} Priority</h2>)}
 
-                        {tasks.length > 0 ? (
-                            <ul className="space-y-4">
-                                {tasks.map((task) => (
-                                    // <Draggable key={task.id} id={task.id} data={{ priority }}>
-                                        <li key={task.id} className="bg-background border p-4 rounded-md space-y-4 md:relative group overflow-hidden">
-                                            <div className='fixed md:absolute bottom-0 md:top-0 left-0 w-full h-20 md:h-full bg-background/30 backdrop-blur-md hidden group-hover:flex items-center justify-center gap-6'>
-                                                {task.status === 'Incomplete' && (
-                                                    <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-sky-500 text-white' onClick={() => toggleStatus(task.id)}>
-                                                        <CirclePlus size={20} />
+                            {tasks.length > 0 ? (
+                                <ul className="space-y-4">
+                                    {tasks.map((task) => (
+                                        <Draggable key={task.id} id={task.id} data={{ priority }}>
+                                            <li className="bg-background border p-4 rounded-md space-y-4 md:relative group overflow-hidden">
+                                                <div className='fixed md:absolute bottom-0 md:top-0 left-0 w-full h-20 md:h-full bg-background/30 backdrop-blur-md hidden group-hover:flex items-center justify-center gap-6 cursor-move'>
+                                                    {task.status === 'Incomplete' && (
+                                                        <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-sky-500 text-white' onClick={() => toggleStatus(task.id)}>
+                                                            <CirclePlus size={20} />
+                                                        </div>
+                                                    )}
+                                                    {task.status === 'Complete' && (
+                                                        <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-sky-500 text-white' onClick={() => toggleStatus(task.id)}>
+                                                            <CircleDot size={20} />
+                                                        </div>
+                                                    )}
+                                                    <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-yellow-500 text-white' onClick={() => handleEditClick(task)}>
+                                                        <PencilLine size={20} />
                                                     </div>
-                                                )}
-                                                {task.status === 'Complete' && (
-                                                    <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-sky-500 text-white' onClick={() => toggleStatus(task.id)}>
-                                                        <CircleDot size={20} />
+                                                    <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-red-500 text-white' onClick={() => deleteTask(task.id)}>
+                                                        <Trash size={20} />
                                                     </div>
-                                                )}
-                                                <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-yellow-500 text-white' onClick={() => handleEditClick(task)}>
-                                                    <PencilLine size={20} />
+                                                    <Link href={`/tasks/${task.id}`} className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-green-500 text-white'>
+                                                        <ChevronRight size={20} />
+                                                    </Link>
                                                 </div>
-                                                <div className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-red-500 text-white' onClick={() => deleteTask(task.id)}>
-                                                    <Trash size={20} />
+                                                <h3 className="font-semibold">{task.title}</h3>
+                                                <p className="text-sm line-clamp-3">{task.description}</p>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Created Date : {new Date(task.createdAt).toLocaleDateString()}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Due Date : {new Date(task.dueDate).toLocaleDateString()}
+                                                    </p>
                                                 </div>
-                                                <Link href={`/tasks/${task.id}`} className='flex items-center justify-center cursor-pointer w-12 aspect-square rounded-full bg-green-500 text-white'>
-                                                    <ChevronRight size={20} />
-                                                </Link>
-                                            </div>
-                                            <h3 className="font-semibold">{task.title}</h3>
-                                            <p className="text-sm line-clamp-3">{task.description}</p>
-                                            <div>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Created Date : {new Date(task.createdAt).toLocaleDateString()}
-                                                </p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Due Date : {new Date(task.dueDate).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            <span
-                                                className={`inline-block px-2 py-1 text-sm rounded-full ${task.status === "Complete" ? "bg-green-500 text-neutral-100" : "bg-red-500 text-neutral-100"
-                                                    }`}
-                                            >
-                                                {task.status}
-                                            </span>
-                                        </li>
-                                    // </Draggable>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-500">No tasks available.</p>
-                        )}
-                    </div>
-                    // </Droppable>
+                                                <span
+                                                    className={`inline-block px-2 py-1 text-sm rounded-full ${task.status === "Complete" ? "bg-green-500 text-neutral-100" : "bg-red-500 text-neutral-100"
+                                                        }`}
+                                                >
+                                                    {task.status}
+                                                </span>
+                                            </li>
+                                        </Draggable>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-500">No tasks available.</p>
+                            )}
+                        </div>
+                    </Droppable>
                 ))}
 
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -241,7 +249,7 @@ const TaskViewer: React.FC<TaskViewerProps> = ({ groupedTasks }) => {
                     </DialogContent>
                 </Dialog>
             </div>
-        // </DndContext>
+        </DndContext>
     )
 }
 
