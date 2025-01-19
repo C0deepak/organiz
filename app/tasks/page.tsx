@@ -51,13 +51,13 @@ const Tasks = () => {
                 <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
                     <div className='flex items-center gap-2 md:gap-6'>
                         <TaskFilter filter={filter} setFilter={setFilter} />
-                        <div className='flex items-center gap-2'>
+                        <div className='flex items-center gap-2 w-full'>
                             <Input
                                 type="text"
                                 placeholder='Search Tasks...'
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className='text-sm bg-background md:w-80' />
+                                className='text-sm bg-background w-full md:w-80' />
                         </div>
                     </div>
 
